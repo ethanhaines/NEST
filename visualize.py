@@ -18,7 +18,7 @@ def create_tsne_plot(embeddings_path, output_path=None, perplexity=30, n_iter=10
     print(f"Loaded {len(embeddings)} embeddings")
     print(f"Running t-SNE (perplexity={perplexity}, n_iter={n_iter})...")
     
-    tsne = TSNE(n_components=2, perplexity=perplexity, n_iter=n_iter, random_state=42)
+    tsne = TSNE(n_components=2, perplexity=perplexity, max_iter=n_iter, random_state=42)
     embeddings_2d = tsne.fit_transform(embeddings)
     
     species_list = sorted(set(m["species"] for m in metadata))

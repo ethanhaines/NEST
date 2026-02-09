@@ -8,9 +8,12 @@ import json
 
 def load_model(model_name="facebook/dinov3-vitb16-pretrain-lvd1689m"):
     processor = AutoImageProcessor.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name, device_map="auto")
+    model = AutoModel.from_pretrained(model_name)
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
     model.eval()
-    print(f"Loaded {model_name} on {model.device}")
+    print(f"Loaded {model_name} on {device}")
     return processor, model
 
 def augment_image(image):
@@ -31,7 +34,7 @@ def extract_single(image, processor, model):
     return embedding.cpu().numpy().squeeze()
 
 def extract_embedding(image_path, processor, model):
-    image = Image.open(image_path).convert("RGB")
+    image = Image.open(image_path).convert("L").convert("RGB")
     augmented = augment_image(image)
     embeddings = [extract_single(img, processor, model) for img in augmented]
     embedding = np.mean(embeddings, axis=0)

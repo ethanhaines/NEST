@@ -1,0 +1,7 @@
+.env
+venv
+slides/
+tiles/
+__pycache__/
+.idea/
+*.pyc

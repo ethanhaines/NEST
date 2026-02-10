@@ -5,10 +5,15 @@ from PIL import Image
 from transformers import AutoImageProcessor, AutoModel
 import argparse
 import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def load_model(model_name="facebook/dinov3-vitb16-pretrain-lvd1689m"):
-    processor = AutoImageProcessor.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name)
+    token = os.getenv("hugging_face_token")
+    processor = AutoImageProcessor.from_pretrained(model_name, token=token)
+    model = AutoModel.from_pretrained(model_name, token=token)
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)

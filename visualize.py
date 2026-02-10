@@ -12,7 +12,7 @@ def load_embeddings(embeddings_path):
         metadata = json.load(f)
     return embeddings, metadata
 
-def create_tsne_plot(embeddings_path, output_path=None, perplexity=30, n_iter=1000):
+def create_tsne_plot(embeddings_path, output_path=None, perplexity=30, n_iter=1000, interactive=False):
     embeddings, metadata = load_embeddings(embeddings_path)
     
     print(f"Loaded {len(embeddings)} embeddings")
@@ -25,25 +25,59 @@ def create_tsne_plot(embeddings_path, output_path=None, perplexity=30, n_iter=10
     colors = plt.cm.tab10(np.linspace(0, 1, len(species_list)))
     species_to_color = {sp: colors[i] for i, sp in enumerate(species_list)}
     
-    plt.figure(figsize=(12, 10))
+    fig, ax = plt.subplots(figsize=(12, 10))
     
+    scatter_data = []
     for species in species_list:
         indices = [i for i, m in enumerate(metadata) if m["species"] == species]
         x = embeddings_2d[indices, 0]
         y = embeddings_2d[indices, 1]
-        plt.scatter(x, y, c=[species_to_color[species]], label=species, alpha=0.6, s=50)
+        sc = ax.scatter(x, y, c=[species_to_color[species]], label=species, alpha=0.6, s=50)
+        scatter_data.append((sc, [metadata[i]["filename"] for i in indices]))
     
-    plt.legend(loc='best', fontsize=10)
-    plt.title(f"t-SNE of DINOv3 Pollen Grain Embeddings ({len(embeddings)} grains)", fontsize=14)
-    plt.xlabel("t-SNE dimension 1")
-    plt.ylabel("t-SNE dimension 2")
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
+    ax.legend(loc='best', fontsize=10)
+    ax.set_title(f"t-SNE of DINOv3 Pollen Grain Embeddings ({len(embeddings)} grains)", fontsize=14)
+    ax.set_xlabel("t-SNE dimension 1")
+    ax.set_ylabel("t-SNE dimension 2")
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
     
-    if output_path:
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    if output_path and not interactive:
+        fig.savefig(output_path, dpi=300, bbox_inches='tight')
         print(f"Saved plot to {output_path}")
-    else:
+    
+    if interactive:
+        annot = ax.annotate("", xy=(0, 0), xytext=(10, 10),
+                            textcoords="offset points",
+                            bbox=dict(boxstyle="round", fc="w"),
+                            fontsize=9)
+        annot.set_visible(False)
+
+        def on_hover(event):
+            if event.inaxes != ax:
+                annot.set_visible(False)
+                fig.canvas.draw_idle()
+                return
+            for sc, names in scatter_data:
+                cont, ind = sc.contains(event)
+                if cont:
+                    idx = ind["ind"][0]
+                    pos = sc.get_offsets()[idx]
+                    annot.xy = pos
+                    annot.set_text(names[idx])
+                    annot.set_visible(True)
+                    fig.canvas.draw_idle()
+                    return
+            annot.set_visible(False)
+            fig.canvas.draw_idle()
+
+        fig.canvas.mpl_connect("motion_notify_event", on_hover)
+        if output_path:
+            fig.savefig(output_path, dpi=300, bbox_inches='tight')
+            print(f"Saved plot to {output_path}")
+        print("Hover over points to see filenames. Close window to exit.")
+        plt.show()
+    elif not output_path:
         plt.show()
 
 def main():
@@ -53,8 +87,10 @@ def main():
     parser.add_argument("--perplexity", "-p", type=int, default=30, help="t-SNE perplexity parameter")
     parser.add_argument("--iterations", "-n", type=int, default=1000, help="t-SNE iterations")
     
+    parser.add_argument("--interactive", "-I", action="store_true", help="Interactive mode with hover labels")
+    
     args = parser.parse_args()
-    create_tsne_plot(args.embeddings, args.output, args.perplexity, args.iterations)
+    create_tsne_plot(args.embeddings, args.output, args.perplexity, args.iterations, args.interactive)
 
 if __name__ == "__main__":
     main()

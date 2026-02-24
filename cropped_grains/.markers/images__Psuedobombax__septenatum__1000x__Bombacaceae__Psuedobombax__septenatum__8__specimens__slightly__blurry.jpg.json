@@ -1,0 +1,81 @@
+{
+  "image_path": "images\\Psuedobombax septenatum\\1000x Bombacaceae Psuedobombax septenatum ~8 specimens slightly blurry.jpg",
+  "crop_size": 480,
+  "species": "psuedobombax_septenatum",
+  "points": [
+    [
+      5907,
+      2201
+    ],
+    [
+      6986,
+      1569
+    ],
+    [
+      7523,
+      2919
+    ],
+    [
+      5537,
+      3817
+    ],
+    [
+      5408,
+      4451
+    ],
+    [
+      7708,
+      4963
+    ],
+    [
+      3159,
+      4725
+    ],
+    [
+      2003,
+      3233
+    ]
+  ],
+  "crops": [
+    {
+      "x": 5907,
+      "y": 2201,
+      "crop_size": 512
+    },
+    {
+      "x": 6986,
+      "y": 1569,
+      "crop_size": 512
+    },
+    {
+      "x": 7523,
+      "y": 2919,
+      "crop_size": 512
+    },
+    {
+      "x": 5537,
+      "y": 3817,
+      "crop_size": 512
+    },
+    {
+      "x": 5408,
+      "y": 4451,
+      "crop_size": 512
+    },
+    {
+      "x": 7708,
+      "y": 4963,
+      "crop_size": 512
+    },
+    {
+      "x": 3159,
+      "y": 4725,
+      "crop_size": 512
+    },
+    {
+      "x": 2003,
+      "y": 3233,
+      "crop_size": 480
+    }
+  ]
+}

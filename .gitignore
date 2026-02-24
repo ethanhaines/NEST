@@ -5,3 +5,4 @@ tiles/
 __pycache__/
 .idea/
 *.pyc
+images/

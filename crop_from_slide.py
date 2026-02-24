@@ -1,11 +1,40 @@
 import cv2
-import numpy as np
 from pathlib import Path
 import argparse
+import re
+import json
 
-SLIDES_DIR = Path("slides")
+SLIDES_DIR = Path("images")
 OUTPUT_DIR = Path("cropped_grains")
 CROP_SIZE = 256
+
+
+def normalize_species_name(raw_name):
+    normalized = re.sub(r"[^a-z0-9]+", "_", raw_name.strip().lower())
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    return normalized
+
+
+def infer_species_name(image_path, images_root):
+    relative = image_path.relative_to(images_root)
+
+    if len(relative.parts) > 1 and relative.parts[0].lower() != "done":
+        return normalize_species_name(relative.parts[0])
+
+    filename = image_path.stem
+    patterns = [
+        r"REAL[_ ](?:Betulaceae[_ ])?(\w+)[_ ](\w+)",
+        r"Juglandaceae[_ ](\w+)[_ ](\w+)",
+        r"(\w+)[_ ](\w+)[_ ]-",
+        r"\d+x[_ ]#\d+[_ ](\w+)[_ ](\w+)",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, filename, re.IGNORECASE)
+        if match:
+            return normalize_species_name(f"{match.group(1)}_{match.group(2)}")
+
+    return ""
 
 class SlideViewer:
     def __init__(self, image_path, crop_size, output_dir, species_name):
@@ -29,29 +58,107 @@ class SlideViewer:
         
         self.center_x = self.full_w // 2
         self.center_y = self.full_h // 2
-        
+
         self.grain_count = 0
-        self.species_output = output_dir / (species_name + f" ({crop_size}x{crop_size})")
-        self.species_output.mkdir(parents=True, exist_ok=True)
-        
-        existing = sorted(self.species_output.glob("*.jpg"))
-        self.grain_count = len(existing)
-        
+        self.next_index_by_size = {}
+
+        markers_dir = output_dir / ".markers"
+        markers_dir.mkdir(parents=True, exist_ok=True)
+        marker_key = re.sub(r"[^a-zA-Z0-9._-]+", "__", str(image_path))
+        self.marker_path = markers_dir / f"{marker_key}.json"
+
         self.dragging = False
         self.last_mouse_x = 0
         self.last_mouse_y = 0
-        
+        self.mouse_x = self.window_size // 2
+        self.mouse_y = self.window_size // 2
+
         self.cropped_grains = []
-        self.last_crop_path = None
-        
+        self.crop_history = []
+
+        self.load_markers()
+
         print(f"\nControls:")
         print(f"  Left click = crop grain at cursor")
-        print(f"  Right drag = pan image")
-        print(f"  Mouse wheel = zoom in/out")
+        print(f"  Two-finger click+drag (right click) or middle-click drag = pan image")
+        print(f"  Arrow keys = pan image")
+        print(f"  '+' or '=' = zoom in")
+        print(f"  '-' = zoom out")
+        print(f"  '[' / ']' = decrease/increase crop size")
+        print(f"  'c' = set exact crop size")
         print(f"  'u' = undo last crop")
         print(f"  'r' = reset view")
         print(f"  'q' = quit")
-        print(f"\nStarting with {self.grain_count} existing grains")
+        print(f"\nStarting crop size: {self.crop_size}")
+        print(f"Loaded {self.grain_count} persisted markers")
+        print(f"Saving crops into size-specific folders like: {self.species_name} (256x256)")
+
+    def get_species_output_dir(self, crop_size):
+        species_output = self.output_dir / f"{self.species_name} ({crop_size}x{crop_size})"
+        species_output.mkdir(parents=True, exist_ok=True)
+        return species_output
+
+    def get_next_index_for_size(self, crop_size):
+        if crop_size not in self.next_index_by_size:
+            species_output = self.get_species_output_dir(crop_size)
+            self.next_index_by_size[crop_size] = len(list(species_output.glob("*.jpg")))
+        return self.next_index_by_size[crop_size]
+
+    def set_crop_size(self, new_size):
+        if new_size < 32:
+            print("Crop size must be at least 32")
+            return
+        if new_size % 2 != 0:
+            new_size += 1
+        self.crop_size = int(new_size)
+        print(f"Crop size set to {self.crop_size}")
+
+    def load_markers(self):
+        if not self.marker_path.exists():
+            return
+        try:
+            with open(self.marker_path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+            crops = payload.get("crops")
+            if isinstance(crops, list):
+                loaded = []
+                for item in crops:
+                    if not isinstance(item, dict):
+                        continue
+                    if "x" not in item or "y" not in item:
+                        continue
+                    crop_size = int(item.get("crop_size", payload.get("crop_size", self.crop_size)))
+                    loaded.append({
+                        "x": int(item["x"]),
+                        "y": int(item["y"]),
+                        "crop_size": crop_size,
+                    })
+                self.cropped_grains = loaded
+            else:
+                points = payload.get("points", [])
+                legacy_size = int(payload.get("crop_size", self.crop_size))
+                self.cropped_grains = [
+                    {"x": int(point[0]), "y": int(point[1]), "crop_size": legacy_size}
+                    for point in points
+                    if isinstance(point, list) and len(point) == 2
+                ]
+            self.grain_count = len(self.cropped_grains)
+        except Exception as exc:
+            print(f"Warning: Could not load markers from {self.marker_path}: {exc}")
+
+    def save_markers(self):
+        payload = {
+            "image_path": str(self.image_path),
+            "crop_size": self.crop_size,
+            "species": self.species_name,
+            "points": [[item["x"], item["y"]] for item in self.cropped_grains],  # legacy compatibility
+            "crops": [
+                {"x": item["x"], "y": item["y"], "crop_size": item["crop_size"]}
+                for item in self.cropped_grains
+            ],
+        }
+        with open(self.marker_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
     
     def get_visible_region(self):
         view_w = int(self.window_size / self.zoom_level)
@@ -73,27 +180,54 @@ class SlideViewer:
         x1, y1, x2, y2 = self.get_visible_region()
         
         view = self.full_image[y1:y2, x1:x2].copy()
-        
-        for grain_x, grain_y in self.cropped_grains:
+
+        display = cv2.resize(view, (self.window_size, self.window_size), interpolation=cv2.INTER_LINEAR)
+
+        view_w = max(1, x2 - x1)
+        view_h = max(1, y2 - y1)
+        scale_x = self.window_size / view_w
+        scale_y = self.window_size / view_h
+
+        # Draw overlays in screen space so rectangle borders remain visible at all zoom levels.
+        for item in self.cropped_grains:
+            grain_x = item["x"]
+            grain_y = item["y"]
+            crop_size = item.get("crop_size", self.crop_size)
             if x1 <= grain_x < x2 and y1 <= grain_y < y2:
                 rel_x = grain_x - x1
                 rel_y = grain_y - y1
-                
-                scale = self.window_size / (x2 - x1)
-                screen_x = int(rel_x * scale)
-                screen_y = int(rel_y * scale)
-                screen_radius = max(5, int(15 * scale))
-                screen_half_crop = int((self.crop_size // 2) * scale)
-                
-                cv2.circle(view, (rel_x, rel_y), int(screen_radius / scale), (0, 255, 0), 2)
-                cv2.rectangle(view,
-                            (rel_x - self.crop_size // 2, rel_y - self.crop_size // 2),
-                            (rel_x + self.crop_size // 2, rel_y + self.crop_size // 2),
-                            (0, 255, 0), 1)
-        
-        display = cv2.resize(view, (self.window_size, self.window_size), interpolation=cv2.INTER_LINEAR)
-        
-        cv2.putText(display, f"Zoom: {self.zoom_level:.2f}x | Grains: {self.grain_count}", 
+
+                disp_x = int(round(rel_x * scale_x))
+                disp_y = int(round(rel_y * scale_y))
+
+                circle_r = max(3, int(round(15 * scale_x)))
+                rect_half_w = max(1, int(round((crop_size / 2) * scale_x)))
+                rect_half_h = max(1, int(round((crop_size / 2) * scale_y)))
+
+                cv2.circle(display, (disp_x, disp_y), circle_r, (0, 255, 0), 2)
+                cv2.rectangle(
+                    display,
+                    (disp_x - rect_half_w, disp_y - rect_half_h),
+                    (disp_x + rect_half_w, disp_y + rect_half_h),
+                    (0, 255, 0),
+                    2,
+                )
+
+        # Ghost preview box for the current crop size at the cursor position.
+        ghost_x = int(max(0, min(self.window_size - 1, self.mouse_x)))
+        ghost_y = int(max(0, min(self.window_size - 1, self.mouse_y)))
+        ghost_half_w = max(1, int(round((self.crop_size / 2) * scale_x)))
+        ghost_half_h = max(1, int(round((self.crop_size / 2) * scale_y)))
+        cv2.rectangle(
+            display,
+            (ghost_x - ghost_half_w, ghost_y - ghost_half_h),
+            (ghost_x + ghost_half_w, ghost_y + ghost_half_h),
+            (0, 255, 0),
+            1,
+            cv2.LINE_AA,
+        )
+
+        cv2.putText(display, f"Zoom: {self.zoom_level:.2f}x | Grains: {self.grain_count} | Crop: {self.crop_size}px", 
                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         cv2.putText(display, f"Position: ({self.center_x}, {self.center_y})",
                    (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
@@ -113,9 +247,22 @@ class SlideViewer:
         img_y = int(y1 + rel_y * view_h)
         
         return img_x, img_y
+
+    def adjust_zoom(self, zoom_in):
+        if zoom_in:
+            self.zoom_level = min(self.max_zoom, self.zoom_level * 1.2)
+        else:
+            self.zoom_level = max(self.min_zoom, self.zoom_level / 1.2)
+
+    def pan_by(self, dx, dy):
+        self.center_x += dx
+        self.center_y += dy
+        self.center_x = max(0, min(self.full_w, self.center_x))
+        self.center_y = max(0, min(self.full_h, self.center_y))
     
     def crop_grain(self, center_x, center_y):
-        half = self.crop_size // 2
+        crop_size = self.crop_size
+        half = crop_size // 2
         
         x1 = center_x - half
         y1 = center_y - half
@@ -142,62 +289,55 @@ class SlideViewer:
         
         crop = self.full_image[y1:y2, x1:x2]
         
-        if crop.shape[0] != self.crop_size or crop.shape[1] != self.crop_size:
-            crop = cv2.resize(crop, (self.crop_size, self.crop_size))
-        
-        output_name = f"{self.species_name}_grain_{self.grain_count:04d}.jpg"
-        output_path = self.species_output / output_name
+        if crop.shape[0] != crop_size or crop.shape[1] != crop_size:
+            crop = cv2.resize(crop, (crop_size, crop_size))
+
+        species_output = self.get_species_output_dir(crop_size)
+        grain_idx = self.get_next_index_for_size(crop_size)
+        output_name = f"{self.species_name}_grain_{grain_idx:04d}.jpg"
+        output_path = species_output / output_name
         cv2.imwrite(str(output_path), crop)
-        
-        self.cropped_grains.append((center_x, center_y))
-        self.last_crop_path = output_path
+
+        crop_record = {"x": center_x, "y": center_y, "crop_size": crop_size}
+        self.cropped_grains.append(crop_record)
+        self.crop_history.append({"path": output_path, "crop": crop_record})
+        self.next_index_by_size[crop_size] = grain_idx + 1
+        self.save_markers()
         self.grain_count += 1
-        print(f"Saved: {output_name} (total: {self.grain_count})")
-    
+        print(f"Saved: {output_name} [{crop_size}x{crop_size}] (total markers: {self.grain_count})")
+
     def on_mouse(self, event, x, y, flags, param):
+        self.mouse_x = x
+        self.mouse_y = y
+
         if event == cv2.EVENT_LBUTTONDOWN:
             img_x, img_y = self.screen_to_image_coords(x, y)
             self.crop_grain(img_x, img_y)
-        
-        elif event == cv2.EVENT_RBUTTONDOWN:
+
+        elif event in (cv2.EVENT_MBUTTONDOWN, cv2.EVENT_RBUTTONDOWN):
             self.dragging = True
             self.last_mouse_x = x
             self.last_mouse_y = y
-        
-        elif event == cv2.EVENT_RBUTTONUP:
+
+        elif event in (cv2.EVENT_MBUTTONUP, cv2.EVENT_RBUTTONUP):
             self.dragging = False
-        
+
         elif event == cv2.EVENT_MOUSEMOVE and self.dragging:
             dx = x - self.last_mouse_x
             dy = y - self.last_mouse_y
-            
+
             move_scale = 1.0 / self.zoom_level
-            self.center_x -= int(dx * move_scale)
-            self.center_y -= int(dy * move_scale)
-            
-            self.center_x = max(0, min(self.full_w, self.center_x))
-            self.center_y = max(0, min(self.full_h, self.center_y))
+            self.pan_by(-int(dx * move_scale), -int(dy * move_scale))
             
             self.last_mouse_x = x
             self.last_mouse_y = y
-        
-        elif event == cv2.EVENT_MOUSEWHEEL:
-            img_x, img_y = self.screen_to_image_coords(x, y)
-            
-            old_zoom = self.zoom_level
-            if flags > 0:
-                self.zoom_level = min(self.max_zoom, self.zoom_level * 1.2)
-            else:
-                self.zoom_level = max(self.min_zoom, self.zoom_level / 1.2)
-            
-            zoom_ratio = self.zoom_level / old_zoom
-            self.center_x = int(img_x + (self.center_x - img_x) * zoom_ratio)
-            self.center_y = int(img_y + (self.center_y - img_y) * zoom_ratio)
-            
-            self.center_x = max(0, min(self.full_w, self.center_x))
-            self.center_y = max(0, min(self.full_h, self.center_y))
     
     def run(self):
+        key_left = 2424832
+        key_up = 2490368
+        key_right = 2555904
+        key_down = 2621440
+
         cv2.namedWindow("Slide Viewer", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("Slide Viewer", self.window_size, self.window_size)
         cv2.setMouseCallback("Slide Viewer", self.on_mouse)
@@ -206,18 +346,26 @@ class SlideViewer:
             display = self.render_view()
             cv2.imshow("Slide Viewer", display)
             
-            key = cv2.waitKey(50) & 0xFF
+            key = cv2.waitKeyEx(50)
+            pan_step = max(10, int(600 / self.zoom_level))
             
             if key == ord('q'):
                 break
             elif key == ord('u'):
-                if self.last_crop_path and self.last_crop_path.exists():
-                    self.last_crop_path.unlink()
+                if self.crop_history:
+                    last = self.crop_history.pop()
+                    last_crop_path = last["path"]
+                    last_crop = last["crop"]
+                    if last_crop_path.exists():
+                        last_crop_path.unlink()
                     self.grain_count -= 1
                     if self.cropped_grains:
                         self.cropped_grains.pop()
+                    crop_size = int(last_crop.get("crop_size", self.crop_size))
+                    if crop_size in self.next_index_by_size:
+                        self.next_index_by_size[crop_size] = max(0, self.next_index_by_size[crop_size] - 1)
+                    self.save_markers()
                     print(f"Undone last crop (total: {self.grain_count})")
-                    self.last_crop_path = None
                 else:
                     print("Nothing to undo")
             elif key == ord('r'):
@@ -225,6 +373,29 @@ class SlideViewer:
                 self.center_x = self.full_w // 2
                 self.center_y = self.full_h // 2
                 print("View reset")
+            elif key in (ord('+'), ord('=')):
+                self.adjust_zoom(zoom_in=True)
+            elif key in (ord('-'), ord('_')):
+                self.adjust_zoom(zoom_in=False)
+            elif key in (ord(']'), ord('}')):
+                self.set_crop_size(self.crop_size + 32)
+            elif key in (ord('['), ord('{')):
+                self.set_crop_size(self.crop_size - 32)
+            elif key == ord('c'):
+                crop_size_input = input(f"Set crop size (current {self.crop_size}): ").strip()
+                if crop_size_input:
+                    try:
+                        self.set_crop_size(int(crop_size_input))
+                    except ValueError:
+                        print("Invalid crop size")
+            elif key == key_left:
+                self.pan_by(-pan_step, 0)
+            elif key == key_right:
+                self.pan_by(pan_step, 0)
+            elif key == key_up:
+                self.pan_by(0, -pan_step)
+            elif key == key_down:
+                self.pan_by(0, pan_step)
         
         cv2.destroyAllWindows()
         print(f"\nTotal grains cropped: {self.grain_count}")
@@ -232,12 +403,16 @@ class SlideViewer:
 def get_slide_list():
     slides = []
     for ext in [".jpg", ".jpeg", ".png", ".tif", ".tiff"]:
-        slides.extend(SLIDES_DIR.rglob(f"*{ext}"))
+        slides.extend(
+            path
+            for path in SLIDES_DIR.rglob(f"*{ext}")
+            if "done" not in [part.lower() for part in path.relative_to(SLIDES_DIR).parts]
+        )
     return sorted(slides)
 
 def main():
     parser = argparse.ArgumentParser(description="Crop pollen grains from full-resolution slide images")
-    parser.add_argument("--slides-dir", "-s", default="slides", help="Directory containing slide images")
+    parser.add_argument("--slides-dir", "--images-dir", "-i", default="images", help="Directory containing full-resolution input images")
     parser.add_argument("--output", "-o", default="cropped_grains", help="Output directory")
     parser.add_argument("--crop-size", "-c", type=int, default=256, help="Crop size in pixels")
     
@@ -257,7 +432,8 @@ def main():
     print(f"\n{len(slides)} slide images available:")
     for i, slide in enumerate(slides):
         rel_path = slide.relative_to(SLIDES_DIR)
-        print(f"  {i}: {rel_path}")
+        inferred_species = infer_species_name(slide, SLIDES_DIR) or "unknown"
+        print(f"  {i}: {rel_path}  [species: {inferred_species}]")
     
     slide_input = input("\nSelect slide number: ").strip()
     try:
@@ -267,7 +443,10 @@ def main():
         print("Invalid selection")
         return
     
-    species_name = input("Enter species name (e.g., betula_populifolia): ").strip()
+    inferred_species = infer_species_name(selected_slide, SLIDES_DIR)
+    species_prompt = f"Species name [{inferred_species}]: " if inferred_species else "Species name (e.g., betula_populifolia): "
+    species_input = input(species_prompt).strip()
+    species_name = normalize_species_name(species_input) if species_input else inferred_species
     if not species_name:
         print("Species name required")
         return

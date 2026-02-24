@@ -1,3 +1,5 @@
+# Install CUDA-enabled PyTorch separately in your venv if you want GPU embedding.
+# Example (Windows): python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 torch>=2.0.0
 torchvision>=0.15.0
 transformers>=4.30.0
@@ -7,4 +9,5 @@ pillow>=10.0.0
 faiss-cpu>=1.7.4
 scikit-learn>=1.3.0
 matplotlib>=3.7.0
+mplcursors>=0.5.3
 python-dotenv>=1.0.0

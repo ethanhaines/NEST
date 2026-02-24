@@ -80,6 +80,21 @@ def parse_species_folder(folder_name):
     return species, crop_size
 
 
+def parse_metadata_from_relative_path(relative_path):
+    parts = relative_path.parts
+    if len(parts) >= 3:
+        # New layout: cropped_grains/<species>/<crop_size>/<image>
+        species = parts[0]
+        crop_candidate = parts[1]
+        if re.fullmatch(r"\d+x\d+", crop_candidate):
+            return species, crop_candidate, "/".join(parts[:2])
+
+    # Legacy layout: cropped_grains/<species (256x256)>/<image>
+    source_folder = parts[0] if len(parts) > 1 else "unknown"
+    species, crop_size = parse_species_folder(source_folder)
+    return species, crop_size, source_folder
+
+
 def process_directory(input_dir, output_path, processor, model):
     input_dir = Path(input_dir)
     embeddings = []
@@ -99,8 +114,7 @@ def process_directory(input_dir, output_path, processor, model):
             embeddings.append(embedding)
 
             relative_path = img_path.relative_to(input_dir)
-            source_folder = relative_path.parts[0] if len(relative_path.parts) > 1 else "unknown"
-            species, crop_size = parse_species_folder(source_folder)
+            species, crop_size, source_folder = parse_metadata_from_relative_path(relative_path)
             metadata.append(
                 {
                     "path": str(img_path),

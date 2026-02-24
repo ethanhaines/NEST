@@ -12,6 +12,7 @@ from embed import load_model, extract_embedding
 load_dotenv()
 
 IMAGES_DIR = Path("cropped_grains")
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".tif", ".tiff"}
 
 def build_index(embeddings_path):
     embeddings = np.load(embeddings_path).astype("float32")
@@ -28,12 +29,20 @@ def build_index(embeddings_path):
     return index, metadata
 
 def get_species_list():
-    species = [d.name for d in IMAGES_DIR.iterdir() if d.is_dir()]
+    species = []
+    for d in IMAGES_DIR.iterdir():
+        if not d.is_dir() or d.name.startswith("."):
+            continue
+        if any(f.suffix.lower() in IMAGE_EXTS for f in d.rglob("*")):
+            species.append(d.name)
     return sorted(species)
 
 def get_images_for_species(species_name):
     species_dir = IMAGES_DIR / species_name
-    return sorted([f for f in species_dir.iterdir() if f.suffix.lower() in {".jpg", ".jpeg", ".png"}])
+    return sorted(
+        [f for f in species_dir.rglob("*") if f.suffix.lower() in IMAGE_EXTS],
+        key=lambda p: str(p).lower(),
+    )
 
 def query_image(image_path, index, metadata, processor, model, k=10):
     embedding = extract_embedding(image_path, processor, model)
@@ -65,7 +74,7 @@ def open_image(path):
         subprocess.run(["xdg-open", path])
 
 def print_results(results, query_path):
-    print(f"\nTop {len(results)} matches for tile {query_path.name}:")
+    print(f"\nTop {len(results)} matches for grain {query_path.name}:")
     print("-" * 60)
     
     species_scores = {}
@@ -75,8 +84,7 @@ def print_results(results, query_path):
         species_scores[r["species"]].append(r["similarity"])
     
     for i, r in enumerate(results, 1):
-        tile_id = r['filename'].split('_tile_')[-1].replace('.jpg', '')
-        print(f"{i:2}. {r['species']:25} tile {tile_id:>3} (similarity: {r['similarity']:.3f})")
+        print(f"{i:2}. {r['species']:25} {r['filename']} (similarity: {r['similarity']:.3f})")
     
     print("\n" + "-" * 60)
     print("Species summary:")

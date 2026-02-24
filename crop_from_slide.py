@@ -91,10 +91,10 @@ class SlideViewer:
         print(f"  'q' = quit")
         print(f"\nStarting crop size: {self.crop_size}")
         print(f"Loaded {self.grain_count} persisted markers")
-        print(f"Saving crops into size-specific folders like: {self.species_name} (256x256)")
+        print(f"Saving crops into size-specific folders like: {self.species_name}/256x256")
 
     def get_species_output_dir(self, crop_size):
-        species_output = self.output_dir / f"{self.species_name} ({crop_size}x{crop_size})"
+        species_output = self.output_dir / self.species_name / f"{crop_size}x{crop_size}"
         species_output.mkdir(parents=True, exist_ok=True)
         return species_output
 

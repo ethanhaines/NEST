@@ -72,6 +72,40 @@ def _open_image(path):
         print(f"Could not open file: {path} ({exc})")
 
 
+def _resolve_metadata_image_path(item):
+    raw_path = item.get("path")
+    if raw_path:
+        p = Path(raw_path)
+        if p.exists():
+            return p
+
+    filename = item.get("filename")
+    species = item.get("species")
+    crop_size = item.get("crop_size")
+    source_folder = item.get("source_folder")
+    if not filename:
+        return None
+
+    candidates = []
+
+    # New layout fallback: cropped_grains/<species>/<crop_size>/<filename>
+    if species and crop_size:
+        candidates.append(Path("cropped_grains") / str(species) / str(crop_size) / str(filename))
+
+    # If metadata stored source_folder as "species/256x256", reconstruct directly.
+    if source_folder:
+        candidates.append(Path("cropped_grains") / Path(str(source_folder)) / str(filename))
+
+    # Legacy layout fallback: cropped_grains/<species (256x256)>/<filename>
+    if species and crop_size:
+        candidates.append(Path("cropped_grains") / f"{species} ({crop_size})" / str(filename))
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def _enable_click_open(fig, scatter_groups, metadata):
     artist_to_indices = {group["artist"]: group["indices"] for group in scatter_groups}
 
@@ -85,8 +119,9 @@ def _enable_click_open(fig, scatter_groups, metadata):
             return
         point_idx = indices[int(picked[0])]
         item = metadata[point_idx]
-        path = item.get("path")
+        path = _resolve_metadata_image_path(item)
         if not path:
+            print(f"Could not resolve image path for: {item.get('filename', 'unknown')}")
             return
         print(f"Opening: {item.get('filename', path)}")
         _open_image(path)

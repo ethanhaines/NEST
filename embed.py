@@ -71,7 +71,7 @@ def extract_embedding(image_path, processor, model):
 
 
 def parse_species_folder(folder_name):
-    # Split labels like "betula_populifolia (256x256)" into species + crop size metadata.
+                                                                                         
     match = re.match(r"^(.*?)\s*\((\d+x\d+)\)\s*$", folder_name)
     if not match:
         return folder_name, None
@@ -83,13 +83,13 @@ def parse_species_folder(folder_name):
 def parse_metadata_from_relative_path(relative_path):
     parts = relative_path.parts
     if len(parts) >= 3:
-        # New layout: cropped_grains/<species>/<crop_size>/<image>
+                                                                  
         species = parts[0]
         crop_candidate = parts[1]
         if re.fullmatch(r"\d+x\d+", crop_candidate):
             return species, crop_candidate, "/".join(parts[:2])
 
-    # Legacy layout: cropped_grains/<species (256x256)>/<image>
+                                                               
     source_folder = parts[0] if len(parts) > 1 else "unknown"
     species, crop_size = parse_species_folder(source_folder)
     return species, crop_size, source_folder

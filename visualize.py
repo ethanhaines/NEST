@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 try:
-    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+    from mpl_toolkits.mplot3d import Axes3D              
 except ImportError:
     Axes3D = None
 
@@ -88,15 +88,15 @@ def _resolve_metadata_image_path(item):
 
     candidates = []
 
-    # New layout fallback: cropped_grains/<species>/<crop_size>/<filename>
+                                                                          
     if species and crop_size:
         candidates.append(Path("cropped_grains") / str(species) / str(crop_size) / str(filename))
 
-    # If metadata stored source_folder as "species/256x256", reconstruct directly.
+                                                                                  
     if source_folder:
         candidates.append(Path("cropped_grains") / Path(str(source_folder)) / str(filename))
 
-    # Legacy layout fallback: cropped_grains/<species (256x256)>/<filename>
+                                                                           
     if species and crop_size:
         candidates.append(Path("cropped_grains") / f"{species} ({crop_size})" / str(filename))
 

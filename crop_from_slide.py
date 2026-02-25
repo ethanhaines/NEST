@@ -151,7 +151,7 @@ class SlideViewer:
             "image_path": str(self.image_path),
             "crop_size": self.crop_size,
             "species": self.species_name,
-            "points": [[item["x"], item["y"]] for item in self.cropped_grains],  # legacy compatibility
+            "points": [[item["x"], item["y"]] for item in self.cropped_grains],                        
             "crops": [
                 {"x": item["x"], "y": item["y"], "crop_size": item["crop_size"]}
                 for item in self.cropped_grains
@@ -188,7 +188,7 @@ class SlideViewer:
         scale_x = self.window_size / view_w
         scale_y = self.window_size / view_h
 
-        # Draw overlays in screen space so rectangle borders remain visible at all zoom levels.
+                                                                                               
         for item in self.cropped_grains:
             grain_x = item["x"]
             grain_y = item["y"]
@@ -213,7 +213,7 @@ class SlideViewer:
                     2,
                 )
 
-        # Ghost preview box for the current crop size at the cursor position.
+                                                                             
         ghost_x = int(max(0, min(self.window_size - 1, self.mouse_x)))
         ghost_y = int(max(0, min(self.window_size - 1, self.mouse_y)))
         ghost_half_w = max(1, int(round((self.crop_size / 2) * scale_x)))

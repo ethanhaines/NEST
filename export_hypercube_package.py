@@ -54,22 +54,68 @@ def normalize_coords(coords):
     maxs = coords.max(axis=0)
     spans = np.maximum(maxs - mins, 1e-8)
 
-    # Centered normalized coords in [-1, 1] are convenient for web scenes.
+                                                                          
     centered = ((coords - mins) / spans) * 2.0 - 1.0
     return centered.astype(np.float32), mins, maxs
 
 
-def compute_cloud_display_coords(coords_raw, whiten_strength=0.6, tanh_gain=1.2, z_boost=1.4):
-    """
-    Build a cloud-friendly display coordinate set from raw 3D t-SNE coordinates.
+def normalize_coords_isotropic(coords, center_mode="mean"):
+\
+\
+\
+\
+\
+       
+    x = np.asarray(coords, dtype=np.float32)
+    if len(x) == 0:
+        zero = np.zeros((0, 3), dtype=np.float32)
+        return zero, {
+            "center_mode": center_mode,
+            "center": [0.0, 0.0, 0.0],
+            "radius_scale": 1.0,
+            "radius_max_before": 0.0,
+            "bounds_before": {"min": [0.0, 0.0, 0.0], "max": [0.0, 0.0, 0.0]},
+            "bounds_after": {"min": [0.0, 0.0, 0.0], "max": [0.0, 0.0, 0.0]},
+        }
 
-    This is a visualization transform (not a replacement for raw t-SNE):
-    - robust center/scale (median + IQR) to reduce outlier domination
-    - PCA rotation so thin dimensions are explicit
-    - partial whitening to boost thin axes without fully destroying shape
-    - tanh soft clipping to prevent a single far cluster flattening everything
-    - final normalization to [-1, 1] per axis for web scenes
-    """
+    if center_mode == "median":
+        center = np.median(x, axis=0).astype(np.float32)
+    else:
+        center = x.mean(axis=0).astype(np.float32)
+
+    centered = (x - center).astype(np.float32)
+    radii = np.linalg.norm(centered, axis=1)
+    radius_max = float(np.max(radii)) if len(radii) else 0.0
+    radius_scale = max(radius_max, 1e-8)
+    x_norm = (centered / float(radius_scale)).astype(np.float32)
+
+    return x_norm, {
+        "center_mode": str(center_mode),
+        "center": [float(v) for v in center],
+        "radius_scale": float(radius_scale),
+        "radius_max_before": float(radius_max),
+        "bounds_before": {
+            "min": [float(v) for v in x.min(axis=0)],
+            "max": [float(v) for v in x.max(axis=0)],
+        },
+        "bounds_after": {
+            "min": [float(v) for v in x_norm.min(axis=0)],
+            "max": [float(v) for v in x_norm.max(axis=0)],
+        },
+    }
+
+
+def compute_cloud_display_coords(coords_raw, whiten_strength=0.6, tanh_gain=1.2, z_boost=1.4):
+\
+\
+\
+\
+\
+\
+\
+\
+\
+       
     x = coords_raw.astype(np.float32).copy()
 
     med = np.median(x, axis=0)
@@ -89,24 +135,210 @@ def compute_cloud_display_coords(coords_raw, whiten_strength=0.6, tanh_gain=1.2,
         scales = np.power(np.maximum(eigvals, 1e-8), float(whiten_strength) / 2.0).astype(np.float32)
         x /= scales
 
-    # After PCA ordering, axis 2 is the smallest-variance axis.
+                                                               
     x[:, 2] *= float(z_boost)
 
     x = np.tanh(x * float(tanh_gain)).astype(np.float32)
-    x_norm, mins, maxs = normalize_coords(x)
+    x_norm, norm_info = normalize_coords_isotropic(x, center_mode="mean")
 
     return x_norm, {
-        "method": "robust_scale + pca + partial_whiten + tanh_clip",
+        "method": "robust_scale + pca + partial_whiten + tanh_clip + isotropic_radius_norm",
         "whiten_strength": float(whiten_strength),
         "tanh_gain": float(tanh_gain),
         "z_boost": float(z_boost),
         "robust_center_median": [float(v) for v in med],
         "robust_scale_iqr": [float(v) for v in iqr],
         "pca_eigenvalues": [float(v) for v in eigvals],
-        "normalized_bounds": {
-            "min": [float(v) for v in mins],
-            "max": [float(v) for v in maxs],
-        },
+        "normalization": norm_info,
+        "normalized_bounds": norm_info["bounds_after"],
+    }
+
+
+def _canonical_species_key(species_name):
+    if species_name is None:
+        return ""
+    s = str(species_name).strip().lower().replace("-", "_").replace(" ", "_")
+    while "__" in s:
+        s = s.replace("__", "_")
+    return s
+
+
+def _matching_species_indices(metadata, species_name):
+    target_key = _canonical_species_key(species_name)
+    matching = [
+        i
+        for i, m in enumerate(metadata)
+        if _canonical_species_key(m.get("species")) == target_key
+    ]
+    return target_key, matching
+
+
+def apply_species_display_axis_stretch(
+    coords_display,
+    metadata,
+    species_name,
+    stretch_factor=1.0,
+    axis_index=1,
+):
+\
+\
+\
+\
+\
+\
+       
+    if not species_name or float(stretch_factor) == 1.0:
+        return coords_display, {"enabled": False, "applied": False}
+
+    target_key, matching = _matching_species_indices(metadata, species_name)
+
+    if not matching:
+        return coords_display, {
+            "enabled": True,
+            "applied": False,
+            "requested_species": str(species_name),
+            "requested_species_canonical": target_key,
+            "matched_nodes": 0,
+            "reason": "species_not_found",
+        }
+
+    if len(matching) < 3:
+        return coords_display, {
+            "enabled": True,
+            "applied": False,
+            "requested_species": str(species_name),
+            "requested_species_canonical": target_key,
+            "matched_nodes": int(len(matching)),
+            "reason": "too_few_nodes",
+        }
+
+    axis = int(np.clip(int(axis_index), 0, 2))
+    factor = float(stretch_factor)
+
+    out = coords_display.astype(np.float32, copy=True)
+    idx = np.asarray(matching, dtype=np.int32)
+    x = out[idx].astype(np.float32, copy=False)
+    center = x.mean(axis=0).astype(np.float32)
+    x0 = (x - center).astype(np.float32)
+
+    cov = np.cov(x0, rowvar=False)
+    eigvals, eigvecs = np.linalg.eigh(cov)
+    order = np.argsort(eigvals)[::-1]
+    eigvals = eigvals[order].astype(np.float32)
+    eigvecs = eigvecs[:, order].astype(np.float32)
+
+                                                                
+    local = (x0 @ eigvecs).astype(np.float32)
+    std_before = np.std(local, axis=0).astype(np.float32)
+    local[:, axis] *= factor
+    std_after = np.std(local, axis=0).astype(np.float32)
+    x_stretched = (local @ eigvecs.T).astype(np.float32) + center
+    out[idx] = x_stretched
+
+                                                                             
+    out_norm, norm_info = normalize_coords_isotropic(out, center_mode="mean")
+
+    matched_species_names = sorted({str(metadata[i].get("species")) for i in matching})
+    return out_norm, {
+        "enabled": True,
+        "applied": True,
+        "requested_species": str(species_name),
+        "requested_species_canonical": target_key,
+        "matched_species": matched_species_names,
+        "matched_nodes": int(len(matching)),
+        "axis_index": axis,
+        "stretch_factor": factor,
+        "local_pca_eigenvalues": [float(v) for v in eigvals],
+        "local_std_before": [float(v) for v in std_before],
+        "local_std_after": [float(v) for v in std_after],
+        "renormalization": norm_info,
+    }
+
+
+def apply_species_display_cloudify(
+    coords_display,
+    metadata,
+    species_name,
+    cloudify_strength=0.0,
+):
+\
+\
+\
+\
+\
+\
+       
+    if not species_name or float(cloudify_strength) <= 0:
+        return coords_display, {"enabled": False, "applied": False}
+
+    strength = float(np.clip(float(cloudify_strength), 0.0, 1.0))
+    target_key, matching = _matching_species_indices(metadata, species_name)
+
+    if not matching:
+        return coords_display, {
+            "enabled": True,
+            "applied": False,
+            "requested_species": str(species_name),
+            "requested_species_canonical": target_key,
+            "matched_nodes": 0,
+            "reason": "species_not_found",
+        }
+
+    if len(matching) < 3:
+        return coords_display, {
+            "enabled": True,
+            "applied": False,
+            "requested_species": str(species_name),
+            "requested_species_canonical": target_key,
+            "matched_nodes": int(len(matching)),
+            "reason": "too_few_nodes",
+        }
+
+    out = coords_display.astype(np.float32, copy=True)
+    idx = np.asarray(matching, dtype=np.int32)
+    x = out[idx].astype(np.float32, copy=False)
+    center = x.mean(axis=0).astype(np.float32)
+    x0 = (x - center).astype(np.float32)
+
+    cov = np.cov(x0, rowvar=False)
+    eigvals, eigvecs = np.linalg.eigh(cov)
+    order = np.argsort(eigvals)[::-1]
+    eigvals = eigvals[order].astype(np.float32)
+    eigvecs = eigvecs[:, order].astype(np.float32)
+
+    local = (x0 @ eigvecs).astype(np.float32)
+    std_before = np.std(local, axis=0).astype(np.float32)
+    std_before_safe = np.clip(std_before, 1e-8, None).astype(np.float32)
+
+    isotropic_target = np.float32(np.mean(std_before_safe))
+    std_target = (1.0 - strength) * std_before_safe + strength * isotropic_target
+    scales = (std_target / std_before_safe).astype(np.float32)
+
+    local_cloud = (local * scales).astype(np.float32)
+    std_after = np.std(local_cloud, axis=0).astype(np.float32)
+    x_cloud = (local_cloud @ eigvecs.T).astype(np.float32) + center
+    out[idx] = x_cloud
+
+    out_norm, norm_info = normalize_coords_isotropic(out, center_mode="mean")
+    matched_species_names = sorted({str(metadata[i].get("species")) for i in matching})
+    anisotropy_before = float(np.max(std_before_safe) / max(float(np.min(std_before_safe)), 1e-8))
+    anisotropy_after = float(np.max(std_after) / max(float(np.min(std_after)), 1e-8))
+
+    return out_norm, {
+        "enabled": True,
+        "applied": True,
+        "requested_species": str(species_name),
+        "requested_species_canonical": target_key,
+        "matched_species": matched_species_names,
+        "matched_nodes": int(len(matching)),
+        "cloudify_strength": float(strength),
+        "local_pca_eigenvalues": [float(v) for v in eigvals],
+        "local_std_before": [float(v) for v in std_before],
+        "local_std_after": [float(v) for v in std_after],
+        "axis_scales_applied": [float(v) for v in scales],
+        "anisotropy_ratio_before": anisotropy_before,
+        "anisotropy_ratio_after": anisotropy_after,
+        "renormalization": norm_info,
     }
 
 
@@ -147,7 +379,7 @@ def _parse_force_bridge_pairs(force_bridge_specs, num_nodes):
             )
         parsed.append(tuple(sorted((a, b))))
 
-    # Preserve order but dedupe
+                               
     unique = []
     seen = set()
     for pair in parsed:
@@ -313,12 +545,41 @@ def _prim_component_mst(component_centers):
     return links
 
 
+def _prim_component_mst_by_display_distance(component_centers):
+    n = len(component_centers)
+    if n <= 1:
+        return []
+
+    used = [False] * n
+    used[0] = True
+    links = []
+
+    for _ in range(n - 1):
+        best = None
+        for i in range(n):
+            if not used[i]:
+                continue
+            for j in range(n):
+                if used[j]:
+                    continue
+                dist = float(np.linalg.norm(component_centers[i] - component_centers[j]))
+                if best is None or dist < best[0]:
+                    best = (dist, i, j)
+        if best is None:
+            break
+        dist, i, j = best
+        used[j] = True
+        links.append((dist, i, j))
+
+    return links
+
+
 def _top_cross_component_pairs(vecs, comp_a, comp_b, limit, seen_pairs):
     a = np.asarray(comp_a, dtype=np.int32)
     b = np.asarray(comp_b, dtype=np.int32)
     sims = vecs[a] @ vecs[b].T
 
-    # Flatten and sort descending by similarity. Components are small enough here.
+                                                                                  
     order = np.argsort(sims, axis=None)[::-1]
     picked = []
     for flat_idx in order:
@@ -331,6 +592,142 @@ def _top_cross_component_pairs(vecs, comp_a, comp_b, limit, seen_pairs):
         picked.append((u, v, float(sims[ia, ib])))
         if len(picked) >= limit:
             break
+    return picked
+
+
+def _top_boundary_facing_cross_component_pairs(
+    vecs,
+    coords_display,
+    comp_a,
+    comp_b,
+    limit,
+    seen_pairs,
+    pool_size=24,
+    source_usage_counts=None,
+    target_usage_counts=None,
+    source_reuse_penalty=0.06,
+    target_reuse_penalty=0.03,
+):
+\
+\
+\
+       
+    a_all = np.asarray(comp_a, dtype=np.int32)
+    b_all = np.asarray(comp_b, dtype=np.int32)
+    if len(a_all) == 0 or len(b_all) == 0 or limit <= 0:
+        return []
+
+    a_xyz = coords_display[a_all].astype(np.float32, copy=False)
+    b_xyz = coords_display[b_all].astype(np.float32, copy=False)
+    center_a = a_xyz.mean(axis=0).astype(np.float32)
+    center_b = b_xyz.mean(axis=0).astype(np.float32)
+
+    ab = center_b - center_a
+    ab_norm = float(np.linalg.norm(ab))
+    if ab_norm > 1e-12:
+        dir_ab = (ab / ab_norm).astype(np.float32)
+        dir_ba = (-dir_ab).astype(np.float32)
+    else:
+        dir_ab = np.zeros(3, dtype=np.float32)
+        dir_ba = np.zeros(3, dtype=np.float32)
+
+    def _boundary_candidate_scores(points_xyz, own_center, other_center, facing_dir):
+        deltas = points_xyz - own_center
+        local_r = np.linalg.norm(deltas, axis=1)
+        local_r_max = max(float(local_r.max()) if len(local_r) else 0.0, 1e-8)
+        edge_norm = (local_r / local_r_max).astype(np.float32)
+
+        if np.any(facing_dir):
+            facing_proj = deltas @ facing_dir
+            facing_pos = np.clip(facing_proj, 0.0, None)
+            facing_max = max(float(facing_pos.max()) if len(facing_pos) else 0.0, 1e-8)
+            facing_norm = (facing_pos / facing_max).astype(np.float32)
+        else:
+            facing_norm = np.zeros(len(points_xyz), dtype=np.float32)
+
+        dist_to_other = np.linalg.norm(points_xyz - other_center, axis=1)
+        if len(dist_to_other):
+            d_min = float(dist_to_other.min())
+            d_span = max(float(dist_to_other.max() - d_min), 1e-8)
+            close_norm = (1.0 - ((dist_to_other - d_min) / d_span)).astype(np.float32)
+        else:
+            close_norm = np.zeros(0, dtype=np.float32)
+
+        score = (0.5 * facing_norm + 0.3 * edge_norm + 0.2 * close_norm).astype(np.float32)
+        return score, edge_norm
+
+    a_scores, a_edge_norm = _boundary_candidate_scores(a_xyz, center_a, center_b, dir_ab)
+    b_scores, b_edge_norm = _boundary_candidate_scores(b_xyz, center_b, center_a, dir_ba)
+
+    a_pool_n = min(len(a_all), max(int(pool_size), int(limit) * 4))
+    b_pool_n = min(len(b_all), max(int(pool_size), int(limit) * 4))
+    a_order = np.argsort(-a_scores)[:a_pool_n]
+    b_order = np.argsort(-b_scores)[:b_pool_n]
+    a_pool = a_all[a_order]
+    b_pool = b_all[b_order]
+
+    a_pool_xyz = coords_display[a_pool].astype(np.float32, copy=False)
+    b_pool_xyz = coords_display[b_pool].astype(np.float32, copy=False)
+    sims = (vecs[a_pool] @ vecs[b_pool].T).astype(np.float32)
+    pair_dists = np.linalg.norm(a_pool_xyz[:, None, :] - b_pool_xyz[None, :, :], axis=2).astype(np.float32)
+
+    if pair_dists.size:
+        d_min = float(pair_dists.min())
+        d_span = max(float(pair_dists.max() - d_min), 1e-8)
+        spatial_closeness = (1.0 - ((pair_dists - d_min) / d_span)).astype(np.float32)
+    else:
+        spatial_closeness = np.zeros_like(pair_dists, dtype=np.float32)
+
+    a_pool_edge = a_edge_norm[a_order] if len(a_order) else np.zeros(0, dtype=np.float32)
+    b_pool_edge = b_edge_norm[b_order] if len(b_order) else np.zeros(0, dtype=np.float32)
+
+    src_usage = {} if source_usage_counts is None else source_usage_counts
+    dst_usage = {} if target_usage_counts is None else target_usage_counts
+    local_src_usage = {}
+    local_dst_usage = {}
+    blocked = set()
+    picked = []
+
+    while len(picked) < limit:
+        best = None
+        for ia, src in enumerate(a_pool):
+            src = int(src)
+            for ib, dst in enumerate(b_pool):
+                dst = int(dst)
+                u, v = sorted((src, dst))
+                if (u, v) in seen_pairs or (u, v) in blocked:
+                    continue
+
+                cosine_sim = float(sims[ia, ib])
+                boundary_bonus = 0.5 * float(a_pool_edge[ia]) + 0.5 * float(b_pool_edge[ib])
+                score = (
+                    0.62 * cosine_sim
+                    + 0.28 * float(spatial_closeness[ia, ib])
+                    + 0.10 * float(boundary_bonus)
+                )
+                score -= float(source_reuse_penalty) * float(src_usage.get(src, 0) + local_src_usage.get(src, 0))
+                score -= float(target_reuse_penalty) * float(dst_usage.get(dst, 0) + local_dst_usage.get(dst, 0))
+
+                if best is None or score > best[0]:
+                    best = (
+                        float(score),
+                        src,
+                        dst,
+                        cosine_sim,
+                        float(pair_dists[ia, ib]),
+                        float(boundary_bonus),
+                    )
+
+        if best is None:
+            break
+
+        score, src, dst, cosine_sim, display_dist, boundary_bonus = best
+        u, v = sorted((src, dst))
+        blocked.add((u, v))
+        picked.append((u, v, cosine_sim, display_dist, boundary_bonus, score))
+        local_src_usage[src] = local_src_usage.get(src, 0) + 1
+        local_dst_usage[dst] = local_dst_usage.get(dst, 0) + 1
+
     return picked
 
 
@@ -359,7 +756,7 @@ def _greedy_antipode_component_pairs(coords_display, components):
         for j in range(i + 1, len(components)):
             dot = float(np.dot(directions[i], directions[j]))
             dist = float(np.linalg.norm(centers[i] - centers[j]))
-            # Lower dot (more negative) means more opposite; distance breaks ties.
+                                                                                  
             candidates.append((dot, -dist, i, j))
 
     candidates.sort()
@@ -439,10 +836,10 @@ def _top_inward_pairs_diversified(
     target_reuse_penalty=0.03,
     source_edge_bias=0.0,
 ):
-    """
-    Like `_top_inward_antipode_pairs`, but spreads bridges across more nodes by
-    penalizing repeated reuse of the same source/target nodes.
-    """
+\
+\
+\
+       
     a_all = np.asarray(comp_a, dtype=np.int32)
     b_all = np.asarray(comp_b, dtype=np.int32)
 
@@ -454,9 +851,9 @@ def _top_inward_pairs_diversified(
     a_inward_pool = a_all[np.argsort(a_d)[:a_pool_n]]
     b_pool = b_all[np.argsort(b_d)[:b_pool_n]]
 
-    # Optional source-edge bias: include candidates near the *local* boundary of
-    # the source island (far from the source island centroid), not just inward
-    # nodes near the global center.
+                                                                                
+                                                                              
+                                   
     a_pool = a_inward_pool
     source_edge_norm = {}
     if float(source_edge_bias) > 0 and len(a_all) > 1:
@@ -477,7 +874,7 @@ def _top_inward_pairs_diversified(
             merged.append(src_id)
         a_pool = np.asarray(merged, dtype=np.int32)
 
-        # Normalized "edge-ness" for scoring bonus.
+                                                   
         local_r_by_id = {int(node_id): float(rad / local_max) for node_id, rad in zip(a_all, a_local_r)}
         source_edge_norm = {int(node_id): local_r_by_id.get(int(node_id), 0.0) for node_id in a_pool}
 
@@ -568,13 +965,13 @@ def add_species_ratio_bridge_edges(
     source_isolation_boost=0.0,
     source_edge_bias=0.0,
 ):
-    """
-    Add presentation bridges between species "islands".
-
-    For each source species, distribute a per-source bridge budget across all
-    *other* species in proportion to the receiving species size.
-    Sender species size does not affect allocation; receiving species size does.
-    """
+\
+\
+\
+\
+\
+\
+       
     if species_bridge_ratio <= 0:
         return base_edges, {"enabled": False, "added_edges": 0}
 
@@ -611,8 +1008,8 @@ def add_species_ratio_bridge_edges(
         species_radii[name] = radius
         max_species_radius = max(max_species_radius, radius)
 
-    # Budget derived from total number of species, as requested.
-    # We ensure at least one attempted bridge to each other species.
+                                                                
+                                                                    
     targets_per_source = num_species - 1
     species_sizes = {name: len(species_groups[name]) for name in species_names}
     seen_pairs = {tuple(sorted((int(e["source"]), int(e["target"])))) for e in base_edges}
@@ -636,7 +1033,7 @@ def add_species_ratio_bridge_edges(
         )
         source_budgets[source_species] = int(per_source_budget)
 
-        # Minimum 1 attempt per other species to avoid floaty isolated species groups.
+                                                                                      
         pair_counts = [1] * len(target_species)
         remaining = per_source_budget - len(target_species)
         if remaining > 0:
@@ -646,7 +1043,7 @@ def add_species_ratio_bridge_edges(
                 weight = float(species_sizes[name])
                 if antipode_bias > 0:
                     dot = float(np.dot(src_dir, species_dirs[name]))
-                    antipode_score = (1.0 - dot) * 0.5  # 0=same direction, 1=opposite
+                    antipode_score = (1.0 - dot) * 0.5                                
                     weight *= 1.0 + float(antipode_bias) * antipode_score
                 target_weights.append(weight)
             extra_counts = _largest_remainder_counts(
@@ -662,8 +1059,8 @@ def add_species_ratio_bridge_edges(
             attempted_species_pairs += 1
             dst_nodes = species_groups[target_name]
 
-            # Reuse the center-biased candidate selection so bridges visually
-            # feed the graph core instead of linking random outer shell points.
+                                                                             
+                                                                               
             top_pairs = _top_inward_pairs_diversified(
                 vecs,
                 coords_display,
@@ -721,15 +1118,16 @@ def add_species_ratio_bridge_edges(
     return edges, stats
 
 
-def add_component_bridge_edges(embeddings, base_edges, bridges_per_link=1):
-    """
-    Connect disconnected kNN components using high-similarity cross-component edges.
-
-    Strategy:
-    1) Find connected components in the current graph.
-    2) Build an MST over components using centroid cosine similarity.
-    3) For each component-link in the MST, add top-N cosine edges across the two components.
-    """
+def add_component_bridge_edges(embeddings, base_edges, bridges_per_link=1, coords_display=None):
+\
+\
+\
+\
+\
+\
+\
+\
+       
     if bridges_per_link <= 0:
         return base_edges, {"enabled": False, "added_edges": 0, "components_before": None, "components_after": None}
 
@@ -747,41 +1145,99 @@ def add_component_bridge_edges(embeddings, base_edges, bridges_per_link=1):
         }
 
     vecs = normalize_embeddings_for_cosine(embeddings)
-    centers = [_component_centroid(vecs, comp) for comp in components]
-    mst_links = _prim_component_mst(centers)
+    embedding_centers = [_component_centroid(vecs, comp) for comp in components]
+    coords_display_valid = (
+        coords_display is not None
+        and len(coords_display) == num_nodes
+    )
+    display_centers = None
+    if coords_display_valid:
+        coords_display = np.asarray(coords_display, dtype=np.float32)
+        display_centers = [
+            coords_display[np.asarray(comp, dtype=np.int32)].mean(axis=0).astype(np.float32)
+            for comp in components
+        ]
+        mst_links = _prim_component_mst_by_display_distance(display_centers)
+        mst_link_mode = "display_centroid_distance"
+    else:
+        mst_links = _prim_component_mst(embedding_centers)
+        mst_link_mode = "embedding_centroid_cosine"
 
     seen_pairs = {tuple(sorted((int(e["source"]), int(e["target"])))) for e in base_edges}
     edges = list(base_edges)
     added = 0
+    node_bridge_usage = {}
 
-    for link_index, (ci, cj, centroid_sim) in enumerate(mst_links, start=1):
-        top_pairs = _top_cross_component_pairs(
-            vecs,
-            components[ci],
-            components[cj],
-            limit=max(1, int(bridges_per_link)),
-            seen_pairs=seen_pairs,
-        )
-        for rank, (u, v, sim) in enumerate(top_pairs, start=1):
-            seen_pairs.add((u, v))
-            edges.append(
-                {
-                    "source": u,
-                    "target": v,
-                    "similarity": float(sim),
-                    "rank_hint": rank,
-                    "edge_kind": "component_bridge",
-                    "bridge_group": link_index,
-                    "bridge_basis": "embedding_cosine",
-                    "component_centroid_similarity": float(centroid_sim),
-                }
+    for link_index, link in enumerate(mst_links, start=1):
+        if coords_display_valid:
+            mst_metric, ci, cj = float(link[0]), int(link[1]), int(link[2])
+        else:
+            mst_metric, ci, cj = float(link[0]), int(link[1]), int(link[2])
+        centroid_sim = float(np.dot(embedding_centers[ci], embedding_centers[cj]))
+
+        top_pairs = []
+        if coords_display_valid:
+            top_pairs = _top_boundary_facing_cross_component_pairs(
+                vecs,
+                coords_display,
+                components[ci],
+                components[cj],
+                limit=max(1, int(bridges_per_link)),
+                seen_pairs=seen_pairs,
+                pool_size=max(20, int(bridges_per_link) * 6),
+                source_usage_counts=node_bridge_usage,
+                target_usage_counts=node_bridge_usage,
             )
+
+        if not top_pairs:
+            fallback_pairs = _top_cross_component_pairs(
+                vecs,
+                components[ci],
+                components[cj],
+                limit=max(1, int(bridges_per_link)),
+                seen_pairs=seen_pairs,
+            )
+            top_pairs = [
+                (u, v, sim, None, None, None)
+                for (u, v, sim) in fallback_pairs
+            ]
+
+        for rank, pair in enumerate(top_pairs, start=1):
+            u, v, sim, display_dist, boundary_bonus, selection_score = pair
+            seen_pairs.add((u, v))
+            node_bridge_usage[int(u)] = node_bridge_usage.get(int(u), 0) + 1
+            node_bridge_usage[int(v)] = node_bridge_usage.get(int(v), 0) + 1
+            edge_payload = {
+                "source": u,
+                "target": v,
+                "similarity": float(sim),
+                "rank_hint": rank,
+                "edge_kind": "component_bridge",
+                "bridge_group": link_index,
+                "bridge_basis": (
+                    "component_display_mst + boundary_facing_display_proximity + embedding_cosine"
+                    if coords_display_valid
+                    else "embedding_cosine"
+                ),
+                "component_centroid_similarity": float(centroid_sim),
+            }
+            if coords_display_valid and display_centers is not None:
+                edge_payload["component_centroid_display_distance"] = float(mst_metric)
+            if display_dist is not None:
+                edge_payload["display_distance"] = float(display_dist)
+            if boundary_bonus is not None:
+                edge_payload["boundary_bonus"] = float(boundary_bonus)
+            if selection_score is not None:
+                edge_payload["selection_score"] = float(selection_score)
+
+            edges.append(edge_payload)
             added += 1
 
     components_after = find_connected_components(num_nodes, edges)
     stats = {
         "enabled": True,
-        "strategy": "component_mst_cosine_bridges",
+        "strategy": "component_mst_boundary_proximity_bridges",
+        "mst_link_mode": mst_link_mode,
         "bridges_per_link": int(bridges_per_link),
         "components_before": len(components),
         "components_after": len(components_after),
@@ -798,14 +1254,14 @@ def add_spatial_antipode_bridge_edges(
     bridges_per_pair=1,
     inward_pool=12,
 ):
-    """
-    Pair disconnected kNN islands with spatially opposite islands and add a few
-    center-biased cross-links for a stronger "core" visual structure.
-
-    Pair selection is spatial (antipodal centroid direction in display coords),
-    but the concrete node edges are chosen by cosine similarity within an
-    inward-facing candidate pool so the links remain somewhat defensible.
-    """
+\
+\
+\
+\
+\
+\
+\
+       
     if bridges_per_pair <= 0:
         return base_edges, {"enabled": False, "added_edges": 0}
 
@@ -890,14 +1346,14 @@ def build_nodes(metadata, coords_raw, coords_tsne_norm, coords_cloud_norm):
             "crop_size": m.get("crop_size"),
             "source_folder": source_folder,
             "path": path_value,
-            # Default web/display position (cloud-friendly transform).
+                                                                      
             "position": {"x": float(cloud_norm[0]), "y": float(cloud_norm[1]), "z": float(cloud_norm[2])},
             "position_cloud": {
                 "x": float(cloud_norm[0]),
                 "y": float(cloud_norm[1]),
                 "z": float(cloud_norm[2]),
             },
-            # Normalized direct t-SNE coords kept for fidelity/comparison.
+                                                                          
             "position_tsne": {
                 "x": float(tsne_norm[0]),
                 "y": float(tsne_norm[1]),
@@ -953,6 +1409,11 @@ def export_package(
     spatial_antipode_bridge_per_pair,
     spatial_antipode_inward_pool,
     component_bridge_per_link,
+    display_cloudify_species,
+    display_cloudify_strength,
+    display_stretch_species,
+    display_stretch_factor,
+    display_stretch_axis,
 ):
     embeddings_path = Path(embeddings_path)
     out_dir = Path(out_dir)
@@ -1020,7 +1481,37 @@ def export_package(
             f"(per component MST link={component_bridge_per_link})..."
         )
         edges, bridge_stats = add_component_bridge_edges(
-            embeddings, edges, bridges_per_link=component_bridge_per_link
+            embeddings,
+            edges,
+            bridges_per_link=component_bridge_per_link,
+            coords_display=coords_cloud,
+        )
+
+    species_display_cloudify_stats = {"enabled": False, "applied": False}
+    if display_cloudify_species and float(display_cloudify_strength) > 0:
+        print(
+            "Applying display-only species cloudify warp "
+            f"(species={display_cloudify_species}, strength={display_cloudify_strength})..."
+        )
+        coords_cloud, species_display_cloudify_stats = apply_species_display_cloudify(
+            coords_cloud,
+            metadata,
+            species_name=display_cloudify_species,
+            cloudify_strength=display_cloudify_strength,
+        )
+
+    species_display_stretch_stats = {"enabled": False, "applied": False}
+    if display_stretch_species and float(display_stretch_factor) != 1.0:
+        print(
+            "Applying display-only species axis stretch "
+            f"(species={display_stretch_species}, factor={display_stretch_factor}, axis={display_stretch_axis})..."
+        )
+        coords_cloud, species_display_stretch_stats = apply_species_display_axis_stretch(
+            coords_cloud,
+            metadata,
+            species_name=display_stretch_species,
+            stretch_factor=display_stretch_factor,
+            axis_index=display_stretch_axis,
         )
 
     species_names = sorted({(m.get("species") or "unknown") for m in metadata})
@@ -1033,7 +1524,7 @@ def export_package(
     write_json(out_dir / "species.json", species_summary)
 
     manifest = {
-        "format": "grainbrain_hypercube_export_v2",
+        "format": "nest_hypercube_export_v2",
         "source_embeddings": str(embeddings_path).replace("\\", "/"),
         "generated_files": {
             "nodes": "nodes.json",
@@ -1057,16 +1548,18 @@ def export_package(
             "normalized_space": "[-1, 1] per axis",
         },
         "display_coordinates": {
-            "default_field": "position",
+            "default_field": "position_tsne",
             "available_fields": [
                 "position",
                 "position_cloud",
                 "position_tsne",
                 "position_raw",
             ],
-            "position": "cloud-friendly transformed coordinates normalized to [-1, 1]",
-            "position_tsne": "direct min-max normalized t-SNE coordinates in [-1, 1]",
+            "position": "cloud-friendly transformed coordinates with isotropic radius normalization (optional stylized display)",
+            "position_tsne": "direct min-max normalized t-SNE coordinates in [-1, 1] (default free-form display)",
             "cloud_transform": cloud_transform,
+            "species_display_cloudify": species_display_cloudify_stats,
+            "species_display_stretch": species_display_stretch_stats,
         },
         "graph": {
             "edge_source": "embedding cosine kNN",
@@ -1078,8 +1571,9 @@ def export_package(
             "bridge_edges": bridge_stats,
         },
         "notes": [
-            "nodes.position defaults to cloud-friendly display coordinates for web scenes",
-            "nodes.position_cloud is the same cloud-friendly display coordinate set",
+            "manifest.display_coordinates.default_field is position_tsne for free-form web display",
+            "nodes.position is cloud-friendly transformed display coordinates (optional stylized alternative)",
+            "nodes.position_cloud is the same cloud-friendly transformed coordinate set",
             "nodes.position_tsne preserves direct normalized t-SNE coordinates",
             "nodes.position_raw preserves original t-SNE coordinates",
             "edges.edge_kind may be 'knn', 'species_ratio_bridge', 'manual_bridge', "
@@ -1098,7 +1592,7 @@ def export_package(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Export a web-friendly hypercube/graph package from GrainBrain embeddings (3D t-SNE + kNN edges)"
+        description="Export a web-friendly hypercube/graph package from NEST (Nearest-Extant Similarity Tool) embeddings (3D t-SNE + kNN edges)"
     )
     parser.add_argument("--embeddings", "-e", default="embeddings/grain_embeddings.npy", help="Path to embeddings .npy")
     parser.add_argument("--out", "-o", default="exports/hypercube", help="Output directory for JSON package")
@@ -1200,11 +1694,48 @@ def main():
     parser.add_argument(
         "--component-bridge-per-link",
         type=int,
-        default=0,
+        default=12,
         help=(
-            "Add cross-component bridge edges after kNN using component-MST cosine links. "
-            "Value is number of node-pair edges added per MST component link (0 disables)."
+            "Add cross-component bridge edges after kNN using a component MST and "
+            "boundary-facing, cosine-scored node links. Value is number of node-pair "
+            "edges added per MST component link (0 disables)."
         ),
+    )
+    parser.add_argument(
+        "--display-cloudify-species",
+        type=str,
+        default="",
+        help=(
+            "Optional display-only cloudify target species (exact species key, "
+            "e.g. quararibea_pterocalyx). Makes a ribbon-like cluster more isotropic."
+        ),
+    )
+    parser.add_argument(
+        "--display-cloudify-strength",
+        type=float,
+        default=0.0,
+        help="Display-only cloudify strength in [0,1] for the selected species (0 disables).",
+    )
+    parser.add_argument(
+        "--display-stretch-species",
+        type=str,
+        default="",
+        help=(
+            "Optional display-only anisotropic stretch target species (exact species key, "
+            "e.g. quararibea_pterocalyx). Does not alter embeddings."
+        ),
+    )
+    parser.add_argument(
+        "--display-stretch-factor",
+        type=float,
+        default=1.0,
+        help="Display-only stretch multiplier for the selected species local PCA axis (1.0 disables).",
+    )
+    parser.add_argument(
+        "--display-stretch-axis",
+        type=int,
+        default=1,
+        help="Local PCA axis index to stretch for the selected species (0=major, 1=middle, 2=minor).",
     )
     args = parser.parse_args()
 
@@ -1227,6 +1758,11 @@ def main():
         spatial_antipode_bridge_per_pair=args.spatial_antipode_bridge_per_pair,
         spatial_antipode_inward_pool=args.spatial_antipode_inward_pool,
         component_bridge_per_link=args.component_bridge_per_link,
+        display_cloudify_species=args.display_cloudify_species,
+        display_cloudify_strength=args.display_cloudify_strength,
+        display_stretch_species=args.display_stretch_species,
+        display_stretch_factor=args.display_stretch_factor,
+        display_stretch_axis=args.display_stretch_axis,
     )
 
 

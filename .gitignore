@@ -6,3 +6,5 @@ __pycache__/
 .idea/
 *.pyc
 images/
+export_hypercube_package.py
+exports/

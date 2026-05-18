@@ -1,0 +1,45 @@
+{
+  "image_path": "images\\Pinus mugo\\1000x Pinus mugo 45 specimens.tif",
+  "crop_size": 512,
+  "species": "pinus_mugo",
+  "points": [
+    [
+      1442,
+      2997
+    ],
+    [
+      6845,
+      328
+    ],
+    [
+      6779,
+      3869
+    ],
+    [
+      12299,
+      5295
+    ]
+  ],
+  "crops": [
+    {
+      "x": 1442,
+      "y": 2997,
+      "crop_size": 608
+    },
+    {
+      "x": 6845,
+      "y": 328,
+      "crop_size": 512
+    },
+    {
+      "x": 6779,
+      "y": 3869,
+      "crop_size": 512
+    },
+    {
+      "x": 12299,
+      "y": 5295,
+      "crop_size": 512
+    }
+  ]
+}

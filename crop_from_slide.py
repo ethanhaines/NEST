@@ -3,10 +3,17 @@ from pathlib import Path
 import argparse
 import re
 import json
+import numpy as np
+from PIL import Image
+import ctypes
+
+Image.MAX_IMAGE_PIXELS = None
 
 SLIDES_DIR = Path("images")
 OUTPUT_DIR = Path("cropped_grains")
 CROP_SIZE = 256
+DEFAULT_WINDOW_WIDTH = 1600
+WINDOW_ASPECT_RATIO = 16 / 9
 
 
 def normalize_species_name(raw_name):
@@ -36,6 +43,31 @@ def infer_species_name(image_path, images_root):
 
     return ""
 
+
+def load_slide_image(image_path):
+    image_path = Path(image_path)
+    suffix = image_path.suffix.lower()
+
+    if suffix in {".tif", ".tiff"}:
+        try:
+            with Image.open(image_path) as img:
+                best_frame = img.copy()
+                best_area = img.width * img.height
+                frame_count = getattr(img, "n_frames", 1)
+                for frame_idx in range(1, frame_count):
+                    img.seek(frame_idx)
+                    area = img.width * img.height
+                    if area > best_area:
+                        best_frame = img.copy()
+                        best_area = area
+
+            rgb = best_frame.convert("RGB")
+            return cv2.cvtColor(np.array(rgb), cv2.COLOR_RGB2BGR)
+        except Exception as exc:
+            print(f"Warning: Pillow TIFF load failed for {image_path}, falling back to OpenCV ({exc})")
+
+    return cv2.imread(str(image_path), cv2.IMREAD_COLOR)
+
 class SlideViewer:
     def __init__(self, image_path, crop_size, output_dir, species_name):
         self.image_path = image_path
@@ -44,16 +76,16 @@ class SlideViewer:
         self.species_name = species_name
         
         print(f"Loading {image_path}...")
-        self.full_image = cv2.imread(str(image_path))
+        self.full_image = load_slide_image(image_path)
         if self.full_image is None:
             raise ValueError(f"Could not load image: {image_path}")
         
         self.full_h, self.full_w = self.full_image.shape[:2]
         print(f"Image size: {self.full_w} x {self.full_h} pixels")
         
-        self.window_size = 1200
+        self.window_width, self.window_height = self.get_default_window_dimensions()
         self.zoom_level = 1.0
-        self.min_zoom = max(self.window_size / self.full_w, self.window_size / self.full_h)
+        self.min_zoom = max(self.window_width / self.full_w, self.window_height / self.full_h)
         self.max_zoom = 10.0
         
         self.center_x = self.full_w // 2
@@ -70,8 +102,8 @@ class SlideViewer:
         self.dragging = False
         self.last_mouse_x = 0
         self.last_mouse_y = 0
-        self.mouse_x = self.window_size // 2
-        self.mouse_y = self.window_size // 2
+        self.mouse_x = self.window_width // 2
+        self.mouse_y = self.window_height // 2
 
         self.cropped_grains = []
         self.crop_history = []
@@ -81,6 +113,7 @@ class SlideViewer:
         print(f"\nControls:")
         print(f"  Left click = crop grain at cursor")
         print(f"  Two-finger click+drag (right click) or middle-click drag = pan image")
+        print(f"  Mouse wheel = decrease/increase crop size")
         print(f"  Arrow keys = pan image")
         print(f"  '+' or '=' = zoom in")
         print(f"  '-' = zoom out")
@@ -92,6 +125,30 @@ class SlideViewer:
         print(f"\nStarting crop size: {self.crop_size}")
         print(f"Loaded {self.grain_count} persisted markers")
         print(f"Saving crops into size-specific folders like: {self.species_name}/256x256")
+        print(f"Viewer window: {self.window_width}x{self.window_height}")
+
+    def get_screen_size(self):
+        try:
+            user32 = ctypes.windll.user32
+            return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+        except Exception:
+            return 1920, 1080
+
+    def get_default_window_dimensions(self):
+        screen_w, screen_h = self.get_screen_size()
+        max_w = int(screen_w * 0.9)
+        max_h = int(screen_h * 0.85)
+
+        width = min(DEFAULT_WINDOW_WIDTH, max_w)
+        height = int(round(width / WINDOW_ASPECT_RATIO))
+
+        if height > max_h:
+            height = max_h
+            width = int(round(height * WINDOW_ASPECT_RATIO))
+
+        width = max(640, width)
+        height = max(360, height)
+        return width, height
 
     def get_species_output_dir(self, crop_size):
         species_output = self.output_dir / self.species_name / f"{crop_size}x{crop_size}"
@@ -112,6 +169,10 @@ class SlideViewer:
             new_size += 1
         self.crop_size = int(new_size)
         print(f"Crop size set to {self.crop_size}")
+
+    def step_crop_size(self, increase, step=32):
+        delta = step if increase else -step
+        self.set_crop_size(self.crop_size + delta)
 
     def load_markers(self):
         if not self.marker_path.exists():
@@ -161,8 +222,8 @@ class SlideViewer:
             json.dump(payload, f, indent=2)
     
     def get_visible_region(self):
-        view_w = int(self.window_size / self.zoom_level)
-        view_h = int(self.window_size / self.zoom_level)
+        view_w = int(self.window_width / self.zoom_level)
+        view_h = int(self.window_height / self.zoom_level)
         
         x1 = max(0, self.center_x - view_w // 2)
         y1 = max(0, self.center_y - view_h // 2)
@@ -181,12 +242,12 @@ class SlideViewer:
         
         view = self.full_image[y1:y2, x1:x2].copy()
 
-        display = cv2.resize(view, (self.window_size, self.window_size), interpolation=cv2.INTER_LINEAR)
+        display = cv2.resize(view, (self.window_width, self.window_height), interpolation=cv2.INTER_LINEAR)
 
         view_w = max(1, x2 - x1)
         view_h = max(1, y2 - y1)
-        scale_x = self.window_size / view_w
-        scale_y = self.window_size / view_h
+        scale_x = self.window_width / view_w
+        scale_y = self.window_height / view_h
 
                                                                                                
         for item in self.cropped_grains:
@@ -213,9 +274,9 @@ class SlideViewer:
                     2,
                 )
 
-                                                                             
-        ghost_x = int(max(0, min(self.window_size - 1, self.mouse_x)))
-        ghost_y = int(max(0, min(self.window_size - 1, self.mouse_y)))
+        # Ghost preview box for the current crop size at the cursor position.
+        ghost_x = int(max(0, min(self.window_width - 1, self.mouse_x)))
+        ghost_y = int(max(0, min(self.window_height - 1, self.mouse_y)))
         ghost_half_w = max(1, int(round((self.crop_size / 2) * scale_x)))
         ghost_half_h = max(1, int(round((self.crop_size / 2) * scale_y)))
         cv2.rectangle(
@@ -240,8 +301,8 @@ class SlideViewer:
         view_w = x2 - x1
         view_h = y2 - y1
         
-        rel_x = screen_x / self.window_size
-        rel_y = screen_y / self.window_size
+        rel_x = screen_x / self.window_width
+        rel_y = screen_y / self.window_height
         
         img_x = int(x1 + rel_x * view_w)
         img_y = int(y1 + rel_y * view_h)
@@ -314,6 +375,14 @@ class SlideViewer:
             img_x, img_y = self.screen_to_image_coords(x, y)
             self.crop_grain(img_x, img_y)
 
+        elif event == getattr(cv2, "EVENT_MOUSEWHEEL", -1):
+            wheel_delta_fn = getattr(cv2, "getMouseWheelDelta", None)
+            delta = wheel_delta_fn(flags) if wheel_delta_fn else flags
+            if delta > 0:
+                self.step_crop_size(increase=True)
+            elif delta < 0:
+                self.step_crop_size(increase=False)
+
         elif event in (cv2.EVENT_MBUTTONDOWN, cv2.EVENT_RBUTTONDOWN):
             self.dragging = True
             self.last_mouse_x = x
@@ -339,7 +408,11 @@ class SlideViewer:
         key_down = 2621440
 
         cv2.namedWindow("Slide Viewer", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("Slide Viewer", self.window_size, self.window_size)
+        cv2.resizeWindow("Slide Viewer", self.window_width, self.window_height)
+        screen_w, screen_h = self.get_screen_size()
+        pos_x = max(0, (screen_w - self.window_width) // 2)
+        pos_y = max(0, (screen_h - self.window_height) // 2)
+        cv2.moveWindow("Slide Viewer", pos_x, pos_y)
         cv2.setMouseCallback("Slide Viewer", self.on_mouse)
         
         while True:
@@ -378,9 +451,9 @@ class SlideViewer:
             elif key in (ord('-'), ord('_')):
                 self.adjust_zoom(zoom_in=False)
             elif key in (ord(']'), ord('}')):
-                self.set_crop_size(self.crop_size + 32)
+                self.step_crop_size(increase=True)
             elif key in (ord('['), ord('{')):
-                self.set_crop_size(self.crop_size - 32)
+                self.step_crop_size(increase=False)
             elif key == ord('c'):
                 crop_size_input = input(f"Set crop size (current {self.crop_size}): ").strip()
                 if crop_size_input:

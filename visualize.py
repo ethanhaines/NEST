@@ -244,7 +244,7 @@ def create_tsne_plot(embeddings_path, output_path=None, perplexity=30, n_iter=10
 
 def main():
     parser = argparse.ArgumentParser(description="Create t-SNE visualization of pollen grain embeddings")
-    parser.add_argument("--embeddings", "-e", default="embeddings/grain_embeddings.npy", help="Path to embeddings")
+    parser.add_argument("--embeddings", "-e", default="embeddings/extant_embeddings.npy", help="Path to embeddings")
     parser.add_argument("--output", "-o", default="tsne_plot.png", help="Output image path")
     parser.add_argument("--perplexity", "-p", type=int, default=30, help="t-SNE perplexity parameter")
     parser.add_argument("--iterations", "-n", type=int, default=1000, help="t-SNE iterations")

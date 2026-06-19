@@ -42,7 +42,7 @@ Current embedded dataset:
 
 ### Image Acquisition and Curation
 
-Images were captured with a Keyence VHX-7000 microscope at 1000x magnification. Whole-slide images are too large and noisy for direct comparison, so `crop_from_slide.py` provides an interactive cropper for manually selecting individual grains.
+Images were captured with a Keyence VHX-7000 microscope at 1000x magnification. Whole-slide images are too large and noisy for direct comparison, so `crop_from_slide.py` provides an interactive cropper for manually selecting individual grains. META's Segment Anyting Model (SAM) was considered but not implemented due to inaccuracy and computational complexity.
 
 The cropper supports:
 

@@ -150,7 +150,7 @@ def interactive_mode(index, metadata, processor, model, k):
 
 def main():
     parser = argparse.ArgumentParser(description="Search for similar pollen grains")
-    parser.add_argument("--index", "-i", default="embeddings/extant_embeddings.npy", help="Path to embeddings")
+    parser.add_argument("--index", "-i", default="embeddings/grain_embeddings.npy", help="Path to embeddings")
     parser.add_argument("--k", type=int, default=10, help="Number of results to return")
     parser.add_argument("--model", "-m", default="facebook/dinov3-vitb16-pretrain-lvd1689m", help="DINOv3 model name")
     

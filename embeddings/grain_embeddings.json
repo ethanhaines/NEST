@@ -10304,6 +10304,167 @@
     "crop_size": "256x256"
   },
   {
+    "path": "cropped_grains\\fossil_grains\\128x128\\fossil_grains_grain_0000.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0000.jpg",
+    "source_folder": "fossil_grains/128x128",
+    "crop_size": "128x128"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\128x128\\fossil_grains_grain_0001.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0001.jpg",
+    "source_folder": "fossil_grains/128x128",
+    "crop_size": "128x128"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\160x160\\fossil_grains_grain_0000.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0000.jpg",
+    "source_folder": "fossil_grains/160x160",
+    "crop_size": "160x160"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\160x160\\fossil_grains_grain_0001.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0001.jpg",
+    "source_folder": "fossil_grains/160x160",
+    "crop_size": "160x160"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\160x160\\fossil_grains_grain_0002.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0002.jpg",
+    "source_folder": "fossil_grains/160x160",
+    "crop_size": "160x160"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\160x160\\fossil_grains_grain_0003.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0003.jpg",
+    "source_folder": "fossil_grains/160x160",
+    "crop_size": "160x160"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\160x160\\fossil_grains_grain_0004.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0004.jpg",
+    "source_folder": "fossil_grains/160x160",
+    "crop_size": "160x160"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\160x160\\fossil_grains_grain_0005.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0005.jpg",
+    "source_folder": "fossil_grains/160x160",
+    "crop_size": "160x160"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\160x160\\fossil_grains_grain_0006.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0006.jpg",
+    "source_folder": "fossil_grains/160x160",
+    "crop_size": "160x160"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0000.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0000.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0001.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0001.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0002.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0002.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0003.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0003.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0004.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0004.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0005.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0005.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0006.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0006.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0007.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0007.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0008.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0008.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0009.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0009.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\192x192\\fossil_grains_grain_0010.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0010.jpg",
+    "source_folder": "fossil_grains/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\224x224\\fossil_grains_grain_0000.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0000.jpg",
+    "source_folder": "fossil_grains/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\224x224\\fossil_grains_grain_0001.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0001.jpg",
+    "source_folder": "fossil_grains/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\fossil_grains\\256x256\\fossil_grains_grain_0000.jpg",
+    "species": "fossil_grains",
+    "filename": "fossil_grains_grain_0000.jpg",
+    "source_folder": "fossil_grains/256x256",
+    "crop_size": "256x256"
+  },
+  {
     "path": "cropped_grains\\juglans_nigra\\256x256\\juglans_nigra_grain_0000.jpg",
     "species": "juglans_nigra",
     "filename": "juglans_nigra_grain_0000.jpg",
@@ -19997,5 +20158,572 @@
     "filename": "quararibea_pterocalyx_grain_0000.jpg",
     "source_folder": "quararibea_pterocalyx/384x384",
     "crop_size": "384x384"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0000.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0000.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0001.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0001.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0002.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0002.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0003.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0003.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0004.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0004.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0005.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0005.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0006.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0006.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0007.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0007.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0008.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0008.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\192x192\\quercus_alba_grain_0009.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0009.jpg",
+    "source_folder": "quercus_alba/192x192",
+    "crop_size": "192x192"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0000.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0000.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0001.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0001.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0002.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0002.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0003.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0003.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0004.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0004.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0005.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0005.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0006.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0006.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0007.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0007.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0008.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0008.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0009.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0009.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0010.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0010.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0011.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0011.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0012.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0012.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0013.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0013.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0014.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0014.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0015.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0015.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0016.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0016.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0017.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0017.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0018.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0018.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0019.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0019.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0020.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0020.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0021.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0021.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0022.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0022.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0023.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0023.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0024.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0024.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0025.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0025.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0026.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0026.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0027.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0027.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0028.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0028.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0029.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0029.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0030.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0030.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0031.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0031.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0032.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0032.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0033.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0033.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0034.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0034.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0035.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0035.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0036.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0036.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0037.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0037.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0038.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0038.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0039.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0039.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0040.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0040.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0041.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0041.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0042.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0042.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0043.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0043.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0044.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0044.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0045.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0045.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0046.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0046.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0047.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0047.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0048.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0048.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0049.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0049.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0050.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0050.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0051.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0051.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0052.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0052.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0053.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0053.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0054.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0054.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\224x224\\quercus_alba_grain_0055.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0055.jpg",
+    "source_folder": "quercus_alba/224x224",
+    "crop_size": "224x224"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0000.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0000.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0001.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0001.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0002.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0002.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0003.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0003.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0004.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0004.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0005.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0005.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0006.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0006.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0007.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0007.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0008.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0008.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0009.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0009.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0010.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0010.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0011.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0011.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\256x256\\quercus_alba_grain_0012.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0012.jpg",
+    "source_folder": "quercus_alba/256x256",
+    "crop_size": "256x256"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\288x288\\quercus_alba_grain_0000.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0000.jpg",
+    "source_folder": "quercus_alba/288x288",
+    "crop_size": "288x288"
+  },
+  {
+    "path": "cropped_grains\\quercus_alba\\288x288\\quercus_alba_grain_0001.jpg",
+    "species": "quercus_alba",
+    "filename": "quercus_alba_grain_0001.jpg",
+    "source_folder": "quercus_alba/288x288",
+    "crop_size": "288x288"
   }
 ]

@@ -152,7 +152,7 @@ def process_directory(input_dir, output_path, processor, model):
 def main():
     parser = argparse.ArgumentParser(description="Extract DINOv3 embeddings from pollen images")
     parser.add_argument("input_dir", help="Directory containing images (can have subdirectories by species)")
-    parser.add_argument("--output", "-o", default="embeddings/extant_embeddings.npy", help="Output path for embeddings")
+    parser.add_argument("--output", "-o", default="embeddings/grain_embeddings.npy", help="Output path for embeddings")
     parser.add_argument("--model", "-m", default="facebook/dinov3-vitb16-pretrain-lvd1689m", help="DINOv3 model name")
 
     args = parser.parse_args()

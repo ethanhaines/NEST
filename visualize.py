@@ -30,7 +30,7 @@ def load_embeddings(embeddings_path):
 
 def _build_species_color_map(metadata):
     species_list = sorted(set(m["species"] for m in metadata))
-    cmap = plt.cm.get_cmap("tab20", max(len(species_list), 1))
+    cmap = plt.get_cmap("tab20", max(len(species_list), 1))
     species_to_color = {sp: cmap(i) for i, sp in enumerate(species_list)}
     return species_list, species_to_color
 

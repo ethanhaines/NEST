@@ -1,5 +1,6 @@
 .env
 venv
+.venv/
 slides/
 tiles/
 __pycache__/

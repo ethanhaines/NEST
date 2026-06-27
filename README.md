@@ -15,7 +15,7 @@ Project author: Ethan Haines, University of Florida
 
 This project began during a University of Florida course connected to palynology. The original idea was to explore whether computer vision could help automate pollen identification from microscope imagery.
 
-As the project developed, the direction shifted from direct species classification to similarity search. That shift matters because fossil pollen is often an unknown query, not a guaranteed member of a known training class. For that use case, the more useful question is:
+As the project developed, the direction shifted from direct species classification to similarity search. This stemmed from collaborators questioning the utility of the original vision. For that use case, the more useful question is:
 
 > Which known extant pollen grains are most visually similar to this unknown or fossil grain?
 
@@ -104,13 +104,11 @@ python visualize.py -I
 
 ## Status
 
-NEST is feature-complete as a working prototype. The pipeline now supports data curation, embedding, retrieval, visualization, and static web presentation. The next meaningful improvement is not a new feature, but more data: expanding the extant reference set will make fossil comparisons more useful and scientifically defensible.
+NEST is feature-complete as a working prototype. The pipeline now supports data curation, embedding, retrieval, visualization, and static web presentation.
 
 ## Why It Matters
 
 Manual pollen identification is expert-driven and time intensive. NEST does not try to replace that expertise. It is designed to reduce the search space: given an unknown grain, return visually similar extant candidates that a researcher can inspect more quickly.
-
-That makes it a practical bridge between computer vision and paleobotanical research.
 
 ## Acknowledgments
 
